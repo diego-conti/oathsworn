@@ -8,6 +8,7 @@ using namespace GiNaC;
 namespace po = boost::program_options;
 #include "die.h"
 #include "sequence.h"
+#include "bestsequence.h"
 
 struct Runner {
     int white, yellow, red, black, reroll, target, empower;
@@ -17,7 +18,7 @@ struct Runner {
         red=command_line_variables["red"].as<int>();
         black=command_line_variables["black"].as<int>();
         reroll=command_line_variables["reroll"].as<int>();
-        target=command_line_variables["target"].as<int>();
+        target=command_line_variables.count("target")? command_line_variables["target"].as<int>() : 0;
         empower=command_line_variables["empower"].as<int>();
     }
     virtual void run() const=0;
@@ -34,31 +35,36 @@ struct PrintSuccessChance : Runner {
 };
 
 struct Advise : Runner {
-    using Runner::Runner;
-    struct SequenceAndResult {
-        int n_dice;
-        string seq;
-        ex result=0;
-        bool operator<(const SequenceAndResult& o) {return result<o.result;}
-    };
-
-    SequenceAndResult best_sequence(const DieSequence& seq, int target) const {
-        SequenceAndResult best;
-        for (int n=0;;++n) {
-            SequenceAndResult r{n,seq.to_string(n),seq.roll_n_dice(n).reroll_blanks(reroll).result().chance_of_at_least(target)};
-            if (r<best) return best;
-            best=r;
-        }
-    }
-
+    using Runner::Runner; 
     void run() const override {
         auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow).empower(empower);
-        list<SequenceAndResult> sequences_and_results;
-        for (auto s: available_dice.sequences_without_white()) 
-            sequences_and_results.push_back(best_sequence(s,target));
-        auto best=max_element(sequences_and_results.begin(),sequences_and_results.end());
-        cout<<best->seq<<"\t"<<(best->result)<<"\t"<<(best->result).evalf()<<endl;   
-        
+        auto best=best_sequence(available_dice,target,reroll);
+        cout<<best.seq<<"\t"<<(best.result)<<"\t"<<(best.result).evalf()<<endl;           
+    }
+};
+
+template<typename T>
+void print_csvline(ostream& os,T t) {
+    os<<t<<endl;
+}
+
+template<typename T, typename... Args>
+void print_csvline(ostream& os,T t, Args... args) {
+    os<<t<<",";
+    print_csvline(os,args...);
+}
+
+
+struct Csv : Runner {
+    using Runner::Runner; 
+    void run() const override {
+        auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow);
+        for (int reroll=0;reroll<=5;++reroll)
+        for (int empower=0;empower<=10;++empower)
+        for (int target=1;target<=30;++target) {
+            auto best=best_sequence(available_dice,target,reroll);
+            print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq,best.result,best.result.evalf());
+        }
     }
 };
 
@@ -66,6 +72,7 @@ unique_ptr<Runner> Runner::create(const po::variables_map& command_line_variable
     auto type=command_line_variables["mode"].as<string>();
     if (type=="success-chance") return make_unique<PrintSuccessChance>(command_line_variables);
     else if (type=="advise") return make_unique<Advise>(command_line_variables);
+    else if (type=="csv") return make_unique<Csv>(command_line_variables);    
     else throw std::invalid_argument("invalid mode: "+type);
 }
 
@@ -86,13 +93,13 @@ int main(int argc, char* argv[]) {
             ("reroll",po::value<int>()->default_value(0),"reroll")
             ("target",po::value<int>(),"target value")
             ("empower",po::value<int>()->default_value(0),"empower")
-            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise")
+            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|csv")
             ;
 		try {
             po::variables_map vm;
             po::store(po::parse_command_line(argc, argv, desc), vm);
             po::notify(vm);
-            if (vm.count("help") || !vm.count("target")) print_help(argv[0],desc);            
+            if (vm.count("help")) print_help(argv[0],desc);            
             else Runner::create(vm)->run();
             return 0;
         }
