@@ -30,30 +30,45 @@ public:
 };
 
 struct Dice {
-    ex indet=realsymbol("x");
-    Die white{indet,{blank,blank,1,1,2,{2,critical}},"white"};
-    Die yellow{indet,{blank,blank,1,2,3,{3,critical}},"yellow"};
-    Die red{indet,{blank,blank,2,3,3,{4,critical}},"red"};
-    Die black{indet,{blank,blank,3,3,4,{5,critical}},"black"};
+    const ex indet=realsymbol("x");
+    const vector<Die> dice {
+        {indet,{blank,blank,1,1,2,{2,critical}},"white"},
+        {indet,{blank,blank,1,2,3,{3,critical}},"yellow"},
+        {indet,{blank,blank,2,3,3,{4,critical}},"red"},
+        {indet,{blank,blank,3,3,4,{5,critical}},"black"}
+    };
+    const Die& white=dice[0];
+    const Die& yellow=dice[1];
+    const Die& red=dice[2];
+    const Die& black=dice[3];
     exvector blank_indets() const {return {white.blank_indet(), yellow.blank_indet(), red.blank_indet(), black.blank_indet()};}
+    auto begin() const {return dice.rbegin();}  //iterate from most to least effective die
+    auto end() const {return dice.rend();}
 };
 
 class RollResult {
-    ex blank;
     ex indet;
     ex series;
-    ex truncated_series(int order) const {
-        auto x=series_to_poly(GiNaC::series(series,indet,order));
-        x=x.collect(blank);
-        return x.coeff(blank,0)+x.coeff(blank,1);  
+    ex truncated_series(int order) const {                        
+        return series_to_poly(GiNaC::series(series.expand(),indet,order));        
     }
-    static ex replace_indets(ex series, const exvector& blank_indets, ex blank) {
+    static ex replace_blank_indets(ex series, const exvector& blank_indets, ex blank) {
         lst subs;
         for (auto b: blank_indets) subs.append(b==blank);
         return series.subs(subs);
+        
+    }
+    static ex replace_fails(ex series, ex blank, ex indet) {
+        series=series.expand();
+        ex success=(series.coeff(blank,0)+blank*series.coeff(blank,1)).expand();    //one or zero blanks
+        ex fail=(series-success).expand();                                          //two blanks or more
+        return (success+fail.subs(indet==1)).subs(blank==1);
     }
 public:
-    RollResult(ex series,ex indet, const exvector& blank_indets) : blank{blank_indets.front()}, indet{indet}, series{replace_indets(series,blank_indets,blank)} {
+    RollResult(ex series,ex indet, const exvector& blank_indets) :  indet{indet} {
+        auto blank{blank_indets.front()};
+        auto with_one_blank_indet=replace_blank_indets(series,blank_indets,blank);
+        this->series=replace_fails(with_one_blank_indet,blank, indet);
     }
     ex chance_of_at_least(int k) const {
         return 1-chance_of_less_than(k);
@@ -66,6 +81,19 @@ public:
 class Roll {
     ex series_=1;
     shared_ptr<Dice> dice=make_shared<Dice>();
+    ex reroll_blank(ex series) const {
+        series=series.expand();
+        ex result;
+        for (auto& die : *dice) {
+            auto blank_indet=die.blank_indet();
+            ex without_blank=series.subs(blank_indet==0);
+            ex with_blank=series-without_blank;
+            ex with_rerolled_blank=with_blank/blank_indet * die.series();
+            result+=with_rerolled_blank;
+            series=without_blank;
+        }
+        return result+series;
+    }
 public:
     Roll white(int n) const {
         Roll result=*this;
@@ -89,12 +117,10 @@ public:
     }
     Roll reroll_blanks(int n) const {
         Roll result=*this;
-        while (--n) {
-            auto x=result.series_.collect(dice->white.blank_indet());
-            cout<<"x "<<x<<endl;
-            cout<<x.coeff(dice->white.blank_indet(),1)<<endl;
-            cout<<x.coeff(dice->white.blank_indet(),2)<<endl;
+        while (n--) {
+            result.series_=reroll_blank(result.series_);            
         }
+        return result;
     }
     RollResult result() const {
         return RollResult{series_, dice->indet, dice->blank_indets()};

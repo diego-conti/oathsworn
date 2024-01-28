@@ -13,8 +13,9 @@ void process(const po::variables_map& command_line_variables) {
     int yellow=command_line_variables["yellow"].as<int>();
     int red=command_line_variables["red"].as<int>();
     int black=command_line_variables["black"].as<int>();
+    int reroll=command_line_variables["reroll"].as<int>();
     int target=command_line_variables["target"].as<int>();
-    auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black);
+    auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll);
     cout<<roll.result().chance_of_at_least(target)<<endl;
     cout<<roll.result().chance_of_at_least(target).evalf()<<endl;    
 }
@@ -33,6 +34,7 @@ int main(int argc, char* argv[]) {
             ("yellow",po::value<int>()->default_value(0),"yellow dice")
             ("red",po::value<int>()->default_value(0),"red dice")
             ("black",po::value<int>()->default_value(0),"black dice")
+            ("reroll",po::value<int>()->default_value(0),"reroll")
             ("target",po::value<int>(),"target value")
             ;
 		try {
