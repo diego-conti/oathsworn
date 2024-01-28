@@ -65,7 +65,7 @@ public:
 
 class Roll {
     ex series_=1;
-    shared_ptr<Dice> dice=make_unique<Dice>();
+    shared_ptr<Dice> dice=make_shared<Dice>();
 public:
     Roll white(int n) const {
         Roll result=*this;
@@ -86,6 +86,15 @@ public:
         Roll result=*this;
         result.series_*=pow(dice->black.series(),n);
         return result;
+    }
+    Roll reroll_blanks(int n) const {
+        Roll result=*this;
+        while (--n) {
+            auto x=result.series_.collect(dice->white.blank_indet());
+            cout<<"x "<<x<<endl;
+            cout<<x.coeff(dice->white.blank_indet(),1)<<endl;
+            cout<<x.coeff(dice->white.blank_indet(),2)<<endl;
+        }
     }
     RollResult result() const {
         return RollResult{series_, dice->indet, dice->blank_indets()};
