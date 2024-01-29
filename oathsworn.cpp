@@ -7,6 +7,7 @@ using namespace std;
 using namespace GiNaC;
 namespace po = boost::program_options;
 #include "die.h"
+#include "roll.h"
 #include "sequence.h"
 #include "bestsequence.h"
 
@@ -62,7 +63,7 @@ struct Csv : Runner {
         for (int reroll=0;reroll<=5;++reroll)
         for (int empower=0;empower<=10;++empower)
         for (int target=1;target<=30;++target) {
-            auto best=best_sequence(available_dice,target,reroll);
+            auto best=best_sequence(available_dice.empower(empower),target,reroll);
             print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq,best.result,best.result.evalf());
         }
     }

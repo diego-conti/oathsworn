@@ -99,8 +99,13 @@ public:
     }
     string to_string(int n) const {
         stringstream s;
-        for (auto i =PadWithWhiteIterator::begin(decreasing_sequence);i!=PadWithWhiteIterator::begin(decreasing_sequence)+n;++i)
-            s<<*i;
+        auto begin = PadWithWhiteIterator::begin(decreasing_sequence);
+        auto end = begin+n;
+        s<<"BRYW,"<<count(begin,end,DieColor::BLACK)<<",";
+        s<<count(begin,end,DieColor::RED)<<",";
+        s<<count(begin,end,DieColor::YELLOW)<<",";
+        s<<count(begin,end,DieColor::WHITE);
+//        for (auto i =PadWithWhiteIterator::begin(decreasing_sequence);i!=PadWithWhiteIterator::begin(decreasing_sequence)+n;++i)            s<<*i;
         return s.str();
     }
     Roll roll_n_dice(int n) const {

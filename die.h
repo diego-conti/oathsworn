@@ -49,7 +49,7 @@ struct Dice {
 class RollResult {
     ex indet;
     ex series;
-    ex truncated_series(int order) const {                        
+    ex truncated_series(int order) const {   
         return series_to_poly(GiNaC::series(series.expand(),indet,order));        
     }
     static ex replace_blank_indets(ex series, const exvector& blank_indets, ex blank) {
@@ -65,6 +65,7 @@ class RollResult {
         return (success+fail.subs(indet==1)).subs(blank==1);
     }
 public:
+    RollResult()=default;
     RollResult(ex series,ex indet, const exvector& blank_indets) :  indet{indet} {
         auto blank{blank_indets.front()};
         auto with_one_blank_indet=replace_blank_indets(series,blank_indets,blank);
@@ -77,53 +78,3 @@ public:
         return truncated_series(k).subs(indet==1);
     }
 };
-
-class Roll {
-    ex series_=1;
-    shared_ptr<Dice> dice=make_shared<Dice>();
-    ex reroll_blank(ex series) const {
-        series=series.expand();
-        ex result;
-        for (auto& die : *dice) {
-            auto blank_indet=die.blank_indet();
-            ex without_blank=series.subs(blank_indet==0);
-            ex with_blank=series-without_blank;
-            ex with_rerolled_blank=with_blank/blank_indet * die.series();
-            result+=with_rerolled_blank;
-            series=without_blank;
-        }
-        return result+series;
-    }
-public:
-    Roll white(int n) const {
-        Roll result=*this;
-        result.series_*=pow(dice->white.series(),n);
-        return result;
-    }
-    Roll yellow(int n) const {
-        Roll result=*this;
-        result.series_*=pow(dice->yellow.series(),n);
-        return result;
-    }
-    Roll red(int n) const {
-        Roll result=*this;
-        result.series_*=pow(dice->red.series(),n);
-        return result;
-    }
-    Roll black(int n) const {
-        Roll result=*this;
-        result.series_*=pow(dice->black.series(),n);
-        return result;
-    }
-    Roll reroll_blanks(int n) const {
-        Roll result=*this;
-        while (n--) {
-            result.series_=reroll_blank(result.series_);            
-        }
-        return result;
-    }
-    RollResult result() const {
-        return RollResult{series_, dice->indet, dice->blank_indets()};
-    }
-};
-
