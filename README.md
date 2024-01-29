@@ -17,13 +17,15 @@ and it suggests optimal choice of dice to obtain T or more on a roll with empowe
 
 The 'csv' mode is invoked by 
 
-        ./oathsworn --yellow Y --red R --black B --mode=csv
+        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=csv
 
 ant it prints a CSV where each line takes the form 
         
-        B,R,Y,reroll,empower,target,sequence,chance,chance_float
+        B,R,Y,reroll,empower,target,BRYW, sequence,chance,chance_float
 
-where B,R,Y are the command line parameters, which determine the available dice. Each line indicates the optimal choice of dice to obtain a given target on a roll with those available dice and the given amount of rerolls and the corresponding chance, as a fraction and a floating point number
+Each line indicates the optimal choice of dice to obtain a given target on a roll with B black dice, R red dice, Y yellow dice available, plus the given amount of empower and rerolls, as well as the corresponding chance, given both as a fraction and a floating point number.
+
+The computation is run for all values of B,R,Y, empower, reroll between 0 and maxB, maxR, maxY, maxEmpower, maxReroll respectively. Similarly, target ranges between 1 and maxTarget (though in reversed order; this allows the program to reuse truncated series of higher degree)
 
 # Notes
 

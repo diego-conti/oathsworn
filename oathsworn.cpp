@@ -59,13 +59,20 @@ void print_csvline(ostream& os,T t, Args... args) {
 
 struct Csv : Runner {
     using Runner::Runner; 
-    void run() const override {
+    void print_csv(int black, int red, int yellow) const {
         auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow);
-        for (int reroll=0;reroll<=5;++reroll)
-        for (int empower=0;empower<=10;++empower)
-        for (int target=30;target>=1;--target) {    //use reverse order so highest order truncations of the series are computed first
+        for (int reroll=0;reroll<=this->reroll;++reroll)
+        for (int empower=0;empower<=this->empower;++empower)
+        for (int target=this->target;target>=1;--target) {    //use reverse order so highest order truncations of the series are computed first
             auto best=best_sequence(available_dice.empower(empower),target,reroll);
             print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq,best.result,best.result.evalf());
+        }
+    }
+    void run() const override {
+        for (int b=0;b<=black;++b)
+        for (int r=0;r<=red;++r)
+        for (int y=0;y<=yellow;++y) {            
+            print_csv(b,r,y);
         }
     }
 };
