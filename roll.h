@@ -2,7 +2,6 @@ class Memory;
 
 class Roll {
     int black_=0, red_=0, yellow_=0, white_=0, reroll_=0;
-    //static map<Roll,RollResult> results;   
     ex reroll_blank(ex series, const Dice& dice) const {
         series=series.expand();
         ex result;

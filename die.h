@@ -48,10 +48,8 @@ struct Dice {
 
 class RollResult {
     ex indet;
-    ex series;
-    ex truncated_series(int order) const {   
-        return series_to_poly(GiNaC::series(series.expand(),indet,order));        
-    }
+    mutable Series series;
+    mutable map<int,ex> chance_of_less_than_;
     static ex replace_blank_indets(ex series, const exvector& blank_indets, ex blank) {
         lst subs;
         for (auto b: blank_indets) subs.append(b==blank);
@@ -64,17 +62,22 @@ class RollResult {
         ex fail=(series-success).expand();                                          //two blanks or more
         return (success+fail.subs(indet==1)).subs(blank==1);
     }
-public:
-    RollResult()=default;
-    RollResult(ex series,ex indet, const exvector& blank_indets) :  indet{indet} {
+    static Series series_with_zero_fails(ex series, ex indet, const exvector& blank_indets) {
         auto blank{blank_indets.front()};
         auto with_one_blank_indet=replace_blank_indets(series,blank_indets,blank);
-        this->series=replace_fails(with_one_blank_indet,blank, indet);
+        auto with_zeroed_fails=replace_fails(with_one_blank_indet,blank, indet).expand();
+        return Series{with_zeroed_fails,indet};
+    }
+public:
+    RollResult()=default;
+    RollResult(ex series,ex indet, const exvector& blank_indets) :  indet{indet}, series{series_with_zero_fails(series,indet,blank_indets)} {
     }
     ex chance_of_at_least(int k) const {
         return 1-chance_of_less_than(k);
     }
     ex chance_of_less_than(int k) const {
-        return truncated_series(k).subs(indet==1);
+        auto i=chance_of_less_than_.find(k);
+        if (i!=chance_of_less_than_.end()) return i->second;
+        else return chance_of_less_than_[k]=series.truncated_to_order(k).subs(indet==1);
     }
 };
