@@ -3,7 +3,7 @@ A program to compute success probabilities when rolling dice in Oathsworn
 
 # Usage:
 
-There are currently three modes. Default mode is invoked by 
+There are currently four modes. Default mode is invoked by 
 
         ./oathsworn --white W --yellow Y --red R --black B --reroll K --target T
 
@@ -15,9 +15,19 @@ The 'advise' mode is invoked by
 
 and it suggests optimal choice of dice to obtain T or more on a roll with empower E and R rerolls where Y yellow dice and so on are available.
 
-The 'csv' mode is invoked by 
+The 'success-chance-csv' mode is invoked by 
 
-        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=csv
+        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=success-chance-csv
+
+ant it prints a CSV where each line takes the form 
+        
+        B,R,Y,W,reroll,target,chance,chance_float
+
+Each line indicates the chance of reaching a given target with the given dice and rerolls. The computation is run for all values of B,R,Y, empower, reroll between 0 and maxB, maxR, maxY, maxEmpower, maxReroll respectively. 
+
+The 'advise-csv' mode is invoked by 
+
+        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=advise-csv
 
 ant it prints a CSV where each line takes the form 
         

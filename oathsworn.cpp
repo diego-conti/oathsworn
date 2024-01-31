@@ -57,7 +57,27 @@ void print_csvline(ostream& os,T t, Args... args) {
 }
 
 
-struct Csv : Runner {
+struct PrintSuccessChanceCsv : Runner {
+    using Runner::Runner;
+    void print_csv(int black, int red, int yellow, int white, int reroll, int target) const {
+        auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll);
+        auto chance=roll.result().chance_of_at_least(target);
+        print_csvline(cout,black,red,yellow,white,reroll,target,chance,chance.evalf());
+    }
+    void run() const override {
+        for (int b=0;b<=black;++b)
+        for (int r=0;r<=red;++r)
+        for (int y=0;y<=yellow;++y)             
+        for (int w=0;w<=white;++w)            
+        for (int reroll=0;reroll<=this->reroll;++reroll)
+        for (int target=this->target;target>=1;--target)
+            print_csv(b,r,y,w,reroll,target); 
+    }
+};
+
+
+
+struct AdviseCsv : Runner {
     using Runner::Runner; 
     void print_csv(int black, int red, int yellow) const {
         auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow);
@@ -81,7 +101,8 @@ unique_ptr<Runner> Runner::create(const po::variables_map& command_line_variable
     auto type=command_line_variables["mode"].as<string>();
     if (type=="success-chance") return make_unique<PrintSuccessChance>(command_line_variables);
     else if (type=="advise") return make_unique<Advise>(command_line_variables);
-    else if (type=="csv") return make_unique<Csv>(command_line_variables);    
+    else if (type=="advise-csv") return make_unique<AdviseCsv>(command_line_variables);    
+    else if (type=="success-chance-csv") return make_unique<PrintSuccessChanceCsv>(command_line_variables);    
     else throw std::invalid_argument("invalid mode: "+type);
 }
 
@@ -102,7 +123,7 @@ int main(int argc, char* argv[]) {
             ("reroll",po::value<int>()->default_value(0),"reroll")
             ("target",po::value<int>(),"target value")
             ("empower",po::value<int>()->default_value(0),"empower")
-            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|csv")
+            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|csv|success-chance-csv")
             ;
 		try {
             po::variables_map vm;
