@@ -27,11 +27,13 @@ Each line indicates the chance of reaching a given target with the given dice an
 
 The 'advise-csv' mode is invoked by 
 
-        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=advise-csv
+        ./oathsworn --yellow maxY --red maxR --black maxB --target maxTarget --reroll maxReroll --mode=advise-csv [--success success_file]
 
 ant it prints a CSV where each line takes the form 
         
         B,R,Y,reroll,empower,target, advisedB, advisedR, advisedY, advisedW
+
+If success_file is specified, a csv in the same format as the one output by using '--mode=success-chance-csv' is written to the file, including the rolls used in the computation.
 
 Each line indicates the optimal choice of dice to obtain a given target on a roll with B black dice, R red dice, Y yellow dice available, plus the given amount of empower and rerolls
 

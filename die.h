@@ -80,4 +80,10 @@ public:
         if (i!=chance_of_less_than_.end()) return i->second;
         else return chance_of_less_than_[k]=series.truncated_to_order(k).subs(indet==1);
     }
+     map<int,ex> stored_computations() const {
+        int max=chance_of_less_than_.rbegin()->first;
+        for (int i=1;i<=max;++i) 
+            static_cast<void>(chance_of_less_than(i));  //make sure all elements are computed up to maximum computed value
+        return chance_of_less_than_;
+    }
 };

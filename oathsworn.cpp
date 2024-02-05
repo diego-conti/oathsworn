@@ -6,11 +6,14 @@
 using namespace std;
 using namespace GiNaC;
 namespace po = boost::program_options;
+#include "csvline.h"
 #include "series.h"
 #include "die.h"
 #include "roll.h"
 #include "sequence.h"
 #include "bestsequence.h"
+#include <optional>
+#include <fstream>
 
 struct Runner {
     int white, yellow, red, black, reroll, target, empower;
@@ -45,24 +48,13 @@ struct Advise : Runner {
     }
 };
 
-template<typename T>
-void print_csvline(ostream& os,T t) {
-    os<<t<<endl;
-}
-
-template<typename T, typename... Args>
-void print_csvline(ostream& os,T t, Args... args) {
-    os<<t<<",";
-    print_csvline(os,args...);
-}
-
 
 struct PrintSuccessChanceCsv : Runner {
     using Runner::Runner;
     void print_csv(int black, int red, int yellow, int white, int reroll, int target) const {
         auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll);
         auto chance=roll.result().chance_of_at_least(target);
-        print_csvline(cout,black,red,yellow,white,reroll,target,chance,chance.evalf());
+        roll.print_csvline(cout,target,chance,chance.evalf());
     }
     void run() const override {
         for (int b=0;b<=black;++b)
@@ -78,7 +70,10 @@ struct PrintSuccessChanceCsv : Runner {
 
 
 struct AdviseCsv : Runner {
-    using Runner::Runner; 
+    optional<string> success_csv_file;
+    AdviseCsv(const po::variables_map& command_line_variables) : Runner{command_line_variables} {
+        if (command_line_variables.count("success")) success_csv_file=command_line_variables["success"].as<string>();
+    }
     void print_csv(int black, int red, int yellow) const {
         auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow);
         for (int reroll=0;reroll<=this->reroll;++reroll)
@@ -91,9 +86,13 @@ struct AdviseCsv : Runner {
     void run() const override {
         for (int b=0;b<=black;++b)
         for (int r=0;r<=red;++r)
-        for (int y=0;y<=yellow;++y) {            
-            print_csv(b,r,y);
-        }
+        for (int y=0;y<=yellow;++y)           
+            print_csv(b,r,y);        
+        if (success_csv_file) {
+            ofstream out{success_csv_file.value()};
+            Roll::print_memory(out);
+            cout<<"Success csv printed to "<<success_csv_file.value()<<endl;
+        }        
     }
 };
 
@@ -123,7 +122,8 @@ int main(int argc, char* argv[]) {
             ("reroll",po::value<int>()->default_value(0),"reroll")
             ("target",po::value<int>(),"target value")
             ("empower",po::value<int>()->default_value(0),"empower")
-            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|csv|success-chance-csv")
+            ("success", po::value<string>(),"file for output of success chances, for use in advise-csv mode")
+            ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|advise-csv|success-chance-csv")
             ;
 		try {
             po::variables_map vm;

@@ -51,6 +51,11 @@ public:
         return series;
     }
     const RollResult& result() const;
+
+    static void print_memory(ostream& os);
+    template<typename... T> void print_csvline(ostream& os, T... args) const {
+        ::print_csvline(os,black_,red_,yellow_,white_,reroll_,args...);
+    }
 };
 
 class Memory {
@@ -63,10 +68,24 @@ public:
             return  memory[o]=RollResult{o.series(dice), dice.indet, dice.blank_indets()};
         else return i->second;
     }
+    void print_memory(ostream& os) {
+        for (auto& p: memory) {
+            auto& roll=p.first;
+            for (auto target_and_result : p.second.stored_computations()) {
+                auto target=target_and_result.first;
+                auto chance=target_and_result.second;
+                roll.print_csvline(os,target,chance,chance.evalf());
+            }
+    }
+}
 };
 
  const RollResult& Roll::result() const {
     return memory->get(*this);
+}
+
+void Roll::print_memory(ostream& os) {
+    memory->print_memory(os);
 }
 
 unique_ptr<Memory> Roll::memory =make_unique<Memory>();

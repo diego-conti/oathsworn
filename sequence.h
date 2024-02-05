@@ -101,7 +101,7 @@ public:
         stringstream s;
         auto begin = PadWithWhiteIterator::begin(decreasing_sequence);
         auto end = begin+n;
-        s<<"BRYW,"<<count(begin,end,DieColor::BLACK)<<",";
+        s<<count(begin,end,DieColor::BLACK)<<",";
         s<<count(begin,end,DieColor::RED)<<",";
         s<<count(begin,end,DieColor::YELLOW)<<",";
         s<<count(begin,end,DieColor::WHITE);
@@ -147,3 +147,4 @@ public:
         return sequence.empower(empower_);
     }
 };
+
