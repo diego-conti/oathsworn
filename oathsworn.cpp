@@ -85,7 +85,7 @@ struct AdviseCsv : Runner {
         for (int empower=0;empower<=this->empower;++empower)
         for (int target=this->target;target>=1;--target) {    //use reverse order so highest order truncations of the series are computed first
             auto best=best_sequence(available_dice.empower(empower),target,reroll);
-            print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq,best.result,best.result.evalf());
+            print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq);
         }
     }
     void run() const override {
