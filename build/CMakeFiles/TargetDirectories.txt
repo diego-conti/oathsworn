@@ -1,0 +1,3 @@
+/home/diego/dati/workspace/oathsworn/build/CMakeFiles/oathsworn.dir
+/home/diego/dati/workspace/oathsworn/build/CMakeFiles/edit_cache.dir
+/home/diego/dati/workspace/oathsworn/build/CMakeFiles/rebuild_cache.dir

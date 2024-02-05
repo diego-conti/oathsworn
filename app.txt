@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS "advice"(
+"avB" INTEGER, "avR" INTEGER, "avY" INTEGER, "reroll" INTEGER,
+ "empower" INTEGER, "target" INTEGER, "BRYW" TEXT, "B" INTEGER,
+ "R" INTEGER, "Y" INTEGER, "W" INTEGER, "chanceQ" TEXT,
+ "chance" REAL);
