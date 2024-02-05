@@ -6,12 +6,17 @@ struct SequenceAndResult {
 };
 
 SequenceAndResult best_sequence(const DieSequence& seq, int target, int reroll)  {
+    int less_than_best=0;
     SequenceAndResult best;
-    for (int n=1;;++n) {
+    for (int n=1;less_than_best<3;++n) {
         SequenceAndResult r{n,seq.to_string(n),seq.roll_n_dice(n).reroll_blanks(reroll).result().chance_of_at_least(target)};
-        if (r<best) return best;
-        best=r;
+        if (r<best) less_than_best++; 
+        else {
+            less_than_best=0;
+            best=r;
+        }
     }
+    return best;
 }
 SequenceAndResult best_sequence(const AvailableDice& available_dice, int target, int reroll)  {
     list<SequenceAndResult> sequences_and_results;

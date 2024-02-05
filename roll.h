@@ -71,9 +71,8 @@ public:
     void print_memory(ostream& os) {
         for (auto& p: memory) {
             auto& roll=p.first;
-            for (auto target_and_result : p.second.stored_computations()) {
-                auto target=target_and_result.first;
-                auto chance=target_and_result.second;
+            for (int target=1;target<=p.second.max_stored_target();++target) {
+                auto chance=p.second.chance_of_at_least(target);
                 roll.print_csvline(os,target,chance,chance.evalf());
             }
     }
