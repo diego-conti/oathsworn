@@ -8,7 +8,7 @@ struct SequenceAndResult {
 SequenceAndResult best_sequence(const DieSequence& seq, int target, int reroll)  {
     int less_than_best=0;
     SequenceAndResult best;
-    for (int n=1;less_than_best<3;++n) {
+    for (int n=1;less_than_best<1;++n) {
         SequenceAndResult r{n,seq.to_string(n),seq.roll_n_dice(n).reroll_blanks(reroll).result().chance_of_at_least(target)};
         if (r<best) less_than_best++; 
         else {

@@ -1,7 +1,7 @@
 class Memory; 
 
 class Roll {
-    int black_=0, red_=0, yellow_=0, white_=0, reroll_=0;
+    int black_=0, red_=0, yellow_=0, white_=0, reroll_=0, bonus_=0;
     ex reroll_blank(ex series, const Dice& dice) const {
         series=series.expand();
         ex result;
@@ -42,10 +42,15 @@ public:
         result.reroll_+=n;
         return result;
     }
+    Roll bonus(int n) const {
+        Roll result=*this;
+        result.bonus_+=n;
+        return result;
+    }
     unsigned int hash() const {return white_<<4 |yellow_<<4 | red_ <<4 |black_<<4 |reroll_;}    
      auto operator<=>(const Roll& rhs) const =default; 
     ex series(const Dice& dice) const {
-        ex series=pow(dice.white.series(),white_)*pow(dice.yellow.series(),yellow_)*pow(dice.red.series(),red_)*pow(dice.black.series(),black_);
+        ex series=pow(dice.white.series(),white_)*pow(dice.yellow.series(),yellow_)*pow(dice.red.series(),red_)*pow(dice.black.series(),black_)*pow(dice.indet,bonus_);
         for (int i=0;i<reroll_;++i)
             series=reroll_blank(series,dice);
         return series;
@@ -54,7 +59,7 @@ public:
 
     static void print_memory(ostream& os);
     template<typename... T> void print_csvline(ostream& os, T... args) const {
-        ::print_csvline(os,black_,red_,yellow_,white_,reroll_,args...);
+        ::print_csvline(os,black_,red_,yellow_,white_,reroll_,bonus_,args...);
     }
 };
 

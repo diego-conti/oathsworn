@@ -57,6 +57,7 @@ struct std::iterator_traits<PadWithWhiteIterator> {
 
 class DieSequence {
     vector<DieColor> decreasing_sequence;
+    int bonus_;
     bool can_increase(int i) const { 
         return decreasing_sequence.size()<=i || 
             i==0 && decreasing_sequence[0]!=DieColor::BLACK ||
@@ -84,10 +85,11 @@ class DieSequence {
         return with_modified;
     }
 public:
-    DieSequence(int black, int red, int yellow) {
+    DieSequence(int black, int red, int yellow, int bonus) {
         decreasing_sequence.insert(decreasing_sequence.end(),black,DieColor::BLACK);
         decreasing_sequence.insert(decreasing_sequence.end(),red,DieColor::RED);
         decreasing_sequence.insert(decreasing_sequence.end(),yellow,DieColor::YELLOW);
+        bonus_=bonus;
     }
     list<DieSequence> empower(int empower) const {
         return this->empower(empower,0);
@@ -114,13 +116,19 @@ public:
             .black(count(begin,end,DieColor::BLACK))
             .red(count(begin,end,DieColor::RED))
             .yellow(count(begin,end,DieColor::YELLOW))
-            .white(count(begin,end,DieColor::WHITE));
+            .white(count(begin,end,DieColor::WHITE))
+            .bonus(bonus_);
     }
 };
 
 class AvailableDice {
-    int empower_=0,yellow_=0,red_=0,black_=0;
+    int empower_=0,yellow_=0,red_=0,black_=0, bonus_=0;
 public:
+    AvailableDice bonus(int n) const {
+        AvailableDice result=*this;
+        result.bonus_+=n;
+        return result;
+    }
     AvailableDice yellow(int n) const {
         AvailableDice result=*this;
         result.yellow_+=n;
@@ -142,7 +150,7 @@ public:
         return result;
     }
     list<DieSequence> sequences_without_white() const {
-        auto sequence = DieSequence{black_,red_,yellow_};
+        auto sequence = DieSequence{black_,red_,yellow_,bonus_};
         return sequence.empower(empower_);
     }
 };

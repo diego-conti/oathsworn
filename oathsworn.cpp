@@ -16,13 +16,14 @@ namespace po = boost::program_options;
 #include <fstream>
 
 struct Runner {
-    int white, yellow, red, black, reroll, target, empower;
+    int white, yellow, red, black, reroll, target, empower, bonus;
     Runner(const po::variables_map& command_line_variables) {
         white=command_line_variables["white"].as<int>();
         yellow=command_line_variables["yellow"].as<int>();
         red=command_line_variables["red"].as<int>();
         black=command_line_variables["black"].as<int>();
         reroll=command_line_variables["reroll"].as<int>();
+        bonus=command_line_variables["bonus"].as<int>();
         target=command_line_variables.count("target")? command_line_variables["target"].as<int>() : 0;
         empower=command_line_variables["empower"].as<int>();
     }
@@ -33,7 +34,7 @@ struct Runner {
 struct PrintSuccessChance : Runner {
     using Runner::Runner;
     void run() const override {
-        auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll);
+        auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll).bonus(bonus);
         cout<<roll.result().chance_of_at_least(target)<<endl;
         cout<<roll.result().chance_of_at_least(target).evalf()<<endl;    
     }
@@ -42,7 +43,7 @@ struct PrintSuccessChance : Runner {
 struct Advise : Runner {
     using Runner::Runner; 
     void run() const override {
-        auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow).empower(empower);
+        auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow).empower(empower).bonus(bonus);
         auto best=best_sequence(available_dice,target,reroll);
         cout<<best.seq<<"\t"<<(best.result)<<"\t"<<(best.result).evalf()<<endl;           
     }
@@ -51,8 +52,8 @@ struct Advise : Runner {
 
 struct PrintSuccessChanceCsv : Runner {
     using Runner::Runner;
-    void print_csv(int black, int red, int yellow, int white, int reroll, int target) const {
-        auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll);
+    void print_csv(int black, int red, int yellow, int white, int reroll, int bonus, int target) const {
+        auto roll= Roll{}.white(white).yellow(yellow).red(red).black(black).reroll_blanks(reroll).bonus(bonus);
         auto chance=roll.result().chance_of_at_least(target);
         roll.print_csvline(cout,target,chance,chance.evalf());
     }
@@ -62,8 +63,9 @@ struct PrintSuccessChanceCsv : Runner {
         for (int y=0;y<=yellow;++y)             
         for (int w=0;w<=white;++w)            
         for (int reroll=0;reroll<=this->reroll;++reroll)
+        for (int bonus=0;bonus<=this->bonus;++bonus)
         for (int target=this->target;target>=1;--target)
-            print_csv(b,r,y,w,reroll,target); 
+            print_csv(b,r,y,w,reroll,bonus,target); 
     }
 };
 
@@ -78,8 +80,9 @@ struct AdviseCsv : Runner {
         auto available_dice=AvailableDice{}.black(black).red(red).yellow(yellow);
         for (int reroll=0;reroll<=this->reroll;++reroll)
         for (int empower=0;empower<=this->empower;++empower)
+        for (int bonus=0;bonus<=this->bonus;++bonus)
         for (int target=this->target;target>=1;--target) {    //use reverse order so highest order truncations of the series are computed first
-            auto best=best_sequence(available_dice.empower(empower),target,reroll);
+            auto best=best_sequence(available_dice.empower(empower).bonus(bonus),target,reroll);
             print_csvline(cout,black,red,yellow,reroll,empower,target,best.seq);
         }
     }
@@ -122,6 +125,7 @@ int main(int argc, char* argv[]) {
             ("reroll",po::value<int>()->default_value(0),"reroll")
             ("target",po::value<int>(),"target value")
             ("empower",po::value<int>()->default_value(0),"empower")
+            ("bonus",po::value<int>()->default_value(0), "bonus to add to damage unless two blanks are rolled")
             ("success", po::value<string>(),"file for output of success chances, for use in advise-csv mode")
             ("mode",po::value<string>()->default_value("success-chance"),"success-chance|advise|advise-csv|success-chance-csv")
             ;
